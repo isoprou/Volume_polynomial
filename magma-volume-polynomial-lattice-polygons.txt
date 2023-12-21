@@ -1,0 +1,121 @@
+
+// computes relative volume
+Vol:=function(A,dim)
+if Dimension(A) eq dim then return(Volume(A)); else return(0); end if;
+end function;
+
+// computes mixed area of two polytopes in R^2
+MixedVolume:=function(A,B)
+return((Vol(A+B,2)-Vol(A,2)-Vol(B,2))/2);
+end function;
+
+
+// this reduces the quadratic from f=(a,c,b) to the form (a,c,-b) with a,b>=0 
+// It outputs a unimodular matrix which transforms the input form to the reduced form
+// As the initial input, use the identity matrix. The inverse of the resulting matrix is
+// a non-negative matrix with row 1 >= row 2 coordinate-wise
+// See Prop 3.1 in the paper
+
+
+function ReduceQForm(f,T)
+a:=f[1]; c:=f[2]; b:=f[3];
+D:=c^2-a*b;
+if D le -1 then
+  return 0;
+end if;
+if a ge 1 and b le 0 then
+  return [a,c,b], T;
+else 
+  s:=-Sign(b)*Floor(c/Abs(b));
+  G:=Matrix(Integers(),[[0,1],[1,s]]);
+  return ReduceQForm([b,b*s+c,a+2*c*s+b*s^2],T*G);
+end if;
+end function;
+
+
+/// transforms a form f using a transformation T
+
+function TransformQForm(f,T)
+  a:=f[1]; c:=f[2]; b:=f[3];
+  return [a*T[1][1]^2+2*c*T[1][1]*T[2][1]+b*T[2][1]^2,
+          a*T[1][1]*T[1][2]+c*(T[1][1]*T[2][2]+T[1][2]*T[2][1])+b*T[2][1]*T[2][2],
+          a*T[1][2]^2+2*c*T[1][2]*T[2][2]+b*T[2][2]^2];
+end function;
+
+
+// performs step back if needed, that is changes s_n to the smallest one,
+// see the end of the proof of Prop 3.1
+
+function StepOne(f,T)
+ a:=f[1]; c:=f[2]; b:=f[3];
+ D:=c^2-a*b;
+ l:=Floor((-c+D^(1/2))/a);
+ if l le 0 then 
+   return f,T;
+ else
+   G:=Matrix(Integers(),[[1,l],[0,1]]);
+   return TransformQForm(f,G), G^(-1)*T;
+ end if;
+end function;
+
+
+/// Given f=[A,C,B], the function returns g=(a,c,b) and T which are needed to draw the two lattice polygons
+// Here b<=0 and g(1,1)>0
+
+function BestForm(f)
+ a:=f[1]; c:=f[2]; b:=f[3];
+ D:=c^2-a*b;
+ if D le -1 then
+  return 0;
+ end if;
+ I:=Matrix(Integers(),[[1,0],[0,1]]);
+ f,G:=ReduceQForm(f,I);
+ T:=G^-1;
+ return StepOne(f,T);
+end function;
+
+
+// TEST CASE
+
+f:=[203,142,99];
+BestForm(f);
+
+
+// Here is the main function
+// Given f=[A,B,C], create the polygons P and Q such that Vol(P)=A, V(P,Q)=B, V(Q)=C
+
+function GetPolygons(A,B,C)
+ f,G:=BestForm([A,B,C]);
+ a:=f[1]; b:=f[2]; c:=-f[3]; d:=Floor(a/2); e:=Floor(c/2);
+ x1:=G[1][1]; x2:=G[1][2]; y1:=G[2][1]; y2:=G[2][2];
+ if a mod 2 eq 0 and c mod 2 eq 0 then
+  P:=Polytope([[0,y1],[0,x1],[e*y1,0],[d*x1+b*y1,0],[d*x1+b*y1,x1-y1],[d*x1+(b-e)*y1,x1]]);
+  Q:=Polytope([[0,y2],[0,x2],[e*y2,0],[d*x2+b*y2,0],[d*x2+b*y2,x2-y2],[d*x2+(b-e)*y2,x2]]);
+  return P,Q;
+ end if;
+ if a mod 2 eq 0 and c mod 2 eq 1 then
+  P:=Polytope([[0,y1],[0,x1],[e*y1,0],[d*x1+b*y1,0],[d*x1+b*y1,x1-y1],[d*x1+(b-e-1)*y1,x1]]);
+  Q:=Polytope([[0,y2],[0,x2],[e*y2,0],[d*x2+b*y2,0],[d*x2+b*y2,x2-y2],[d*x2+(b-e-1)*y2,x2]]);
+  return P,Q;
+ end if;
+ if a mod 2 eq 1 and c mod 2 eq 0 then
+  P:=Polytope([[0,y1],[0,x1],[e*y1,0],[(d+1)*x1+b*y1,0],[d*x1+(b+1)*y1,x1-y1],[d*x1+(b-e)*y1,x1]]);
+  Q:=Polytope([[0,y2],[0,x2],[e*y2,0],[(d+1)*x2+b*y2,0],[d*x2+(b+1)*y2,x2-y2],[d*x2+(b-e)*y2,x2]]);
+  return P,Q;
+ end if;
+ if a mod 2 eq 1 and c mod 2 eq 1 then
+  P:=Polytope([[0,y1],[0,x1],[e*y1,0],[(d+1)*x1+b*y1,0],[d*x1+(b+1)*y1,x1-y1],[d*x1+(b-e-1)*y1,x1]]);
+  Q:=Polytope([[0,y2],[0,x2],[e*y2,0],[(d+1)*x2+b*y2,0],[d*x2+(b+1)*y2,x2-y2],[d*x2+(b-e-1)*y2,x2]]);
+  return P,Q;
+ end if;
+end function;
+
+
+
+// TEST
+
+P,Q:=GetPolygons(203,142,99);
+Vol(P,2);
+MixedVolume(P,Q);
+Vol(Q,2);
+
