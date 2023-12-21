@@ -1,3 +1,5 @@
+// load "magma-volume-polynomial-lattice-polygons.txt";
+
 // computes relative volume
 Vol:=function(A,dim)
 if Dimension(A) eq dim then return(Volume(A)); else return(0); end if;
@@ -9,7 +11,7 @@ return((Vol(A+B,2)-Vol(A,2)-Vol(B,2))/2);
 end function;
 
 
-// this reduces the quadratic from f=(a,c,b) to the form (a,c,-b) with a,b>=0 
+// this reduces the quadratic from f=(a,b,c) to the form (a,b,-c) with a,c>=0 
 // It outputs a unimodular matrix which transforms the input form to the reduced form
 // As the initial input, use the identity matrix. The inverse of the resulting matrix is
 // a non-negative matrix with row 1 >= row 2 coordinate-wise
@@ -17,17 +19,17 @@ end function;
 
 
 function ReduceQForm(f,T)
-a:=f[1]; c:=f[2]; b:=f[3];
-D:=c^2-a*b;
+a:=f[1]; b:=f[2]; c:=f[3];
+D:=b^2-a*c;
 if D le -1 then
   return 0;
 end if;
-if a ge 1 and b le 0 then
-  return [a,c,b], T;
+if a ge 1 and c le 0 then
+  return [a,b,c], T;
 else 
-  s:=-Sign(b)*Floor(c/Abs(b));
+  s:=-Sign(c)*Floor(b/Abs(c));
   G:=Matrix(Integers(),[[0,1],[1,s]]);
-  return ReduceQForm([b,b*s+c,a+2*c*s+b*s^2],T*G);
+  return ReduceQForm([c,c*s+b,a+2*b*s+c*s^2],T*G);
 end if;
 end function;
 
@@ -35,10 +37,10 @@ end function;
 /// transforms a form f using a transformation T
 
 function TransformQForm(f,T)
-  a:=f[1]; c:=f[2]; b:=f[3];
-  return [a*T[1][1]^2+2*c*T[1][1]*T[2][1]+b*T[2][1]^2,
-          a*T[1][1]*T[1][2]+c*(T[1][1]*T[2][2]+T[1][2]*T[2][1])+b*T[2][1]*T[2][2],
-          a*T[1][2]^2+2*c*T[1][2]*T[2][2]+b*T[2][2]^2];
+  a:=f[1]; b:=f[2]; c:=f[3];
+  return [a*T[1][1]^2+2*b*T[1][1]*T[2][1]+c*T[2][1]^2,
+          a*T[1][1]*T[1][2]+b*(T[1][1]*T[2][2]+T[1][2]*T[2][1])+c*T[2][1]*T[2][2],
+          a*T[1][2]^2+2*b*T[1][2]*T[2][2]+c*T[2][2]^2];
 end function;
 
 
@@ -46,9 +48,9 @@ end function;
 // see the end of the proof of Prop 3.1
 
 function StepOne(f,T)
- a:=f[1]; c:=f[2]; b:=f[3];
- D:=c^2-a*b;
- l:=Floor((-c+D^(1/2))/a);
+ a:=f[1]; b:=f[2]; c:=f[3];
+ D:=b^2-a*c;
+ l:=Floor((-b+D^(1/2))/a);
  if l le 0 then 
    return f,T;
  else
@@ -58,12 +60,12 @@ function StepOne(f,T)
 end function;
 
 
-/// Given f=[A,C,B], the function returns g=(a,c,b) and T which are needed to draw the two lattice polygons
-// Here b<=0 and g(1,1)>0
+/// Given f=[A,B,C], the function returns g=(a,b,c) and T which are needed to draw the two lattice polygons
+// Here c<=0 and g(1,1)>0
 
 function BestForm(f)
- a:=f[1]; c:=f[2]; b:=f[3];
- D:=c^2-a*b;
+ a:=f[1]; b:=f[2]; c:=f[3];
+ D:=b^2-a*c;
  if D le -1 then
   return 0;
  end if;
@@ -86,7 +88,7 @@ BestForm(f);
 function GetPolygons(A,B,C)
  D:=B^2-A*C;
  if (A le -1) or (B le -1) or (C le -1) or (D le -1) then
-  printf "The numbers A,B,C must be non-negative satisfying B^2>=AC";
+  printf "The numbers A,B,C must be non-negative satisfying B^2>=AC\n";
   return 0,0;
  end if;
  if A+C eq 0 then
@@ -139,10 +141,28 @@ P,Q:=GetPolygons(203,142,99); // produces pentagons
 Vol(P,2);
 MixedVolume(P,Q);
 Vol(Q,2);
+Vertices(P);
+Vertices(Q);
 
 P,Q:=GetPolygons(199,142,99); // produces hexagons
+Vol(P,2);
+MixedVolume(P,Q);
+Vol(Q,2);
+Vertices(P);
+Vertices(Q);
 
 P,Q:=GetPolygons(203,300,99); // produces quadrilaterals 
+Vol(P,2);
+MixedVolume(P,Q);
+Vol(Q,2);
+Vertices(P);
+Vertices(Q);
+
+P,Q:=GetPolygons(223,42,23); // negative discriminant
+
+P,Q:=GetPolygons(-223,-42,23); // negative input
+
+
 
 
 
