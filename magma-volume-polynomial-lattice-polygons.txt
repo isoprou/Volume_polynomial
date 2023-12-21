@@ -11,7 +11,7 @@ return((Vol(A+B,2)-Vol(A,2)-Vol(B,2))/2);
 end function;
 
 
-// this reduces the quadratic from f=(a,b,c) to the form (a,b,-c) with a,c>=0 
+// this reduces an indefinite quadratic from f=(a,b,c) to the form (a,b,-c) with a,c>=0 
 // It outputs a unimodular matrix which transforms the input form to the reduced form
 // As the initial input, use the identity matrix. The inverse of the resulting matrix is
 // a non-negative matrix with row 1 >= row 2 coordinate-wise
@@ -20,10 +20,6 @@ end function;
 
 function ReduceQForm(f,T)
 a:=f[1]; b:=f[2]; c:=f[3];
-D:=b^2-a*c;
-if D le -1 then
-  return 0;
-end if;
 if a ge 1 and c le 0 then
   return [a,b,c], T;
 else 
@@ -64,22 +60,11 @@ end function;
 // Here c<=0 and g(1,1)>0
 
 function BestForm(f)
- a:=f[1]; b:=f[2]; c:=f[3];
- D:=b^2-a*c;
- if D le -1 then
-  return 0;
- end if;
  I:=Matrix(Integers(),[[1,0],[0,1]]);
  f,G:=ReduceQForm(f,I);
  T:=G^-1;
  return StepOne(f,T);
 end function;
-
-
-// TEST CASE
-
-f:=[203,142,99];
-BestForm(f);
 
 
 // Here is the main function
