@@ -1,1 +1,1 @@
-Given an integer quadratic form f(x,y)=Ax^2+2Bx+Cy^2 with A,B,C>=0 and B^2>=AC there exist planar lattice polytopes P, Q whose normalized volume polynomial Vol(xP+yQ) equals f(x,y). This Magma code constructs such P and Q.
+Given an integer quadratic form f(x,y)=Ax^2+2Bx+Cy^2 with A,B,C>=0 and B^2>=AC there exist planar lattice polytopes P, Q whose normalized volume polynomial Vol(xP+yQ) equals f(x,y). This Magma code constructs such P and Q. See our paper "The volume polynomial of lattice polygons" with Jenya Soprunova on the arvix: https://arxiv.org/abs/2401.06111
